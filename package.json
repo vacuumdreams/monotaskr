@@ -7,7 +7,7 @@
   "type": "module",
   "bin": "index.js",
   "scripts": {
-    "test": "echo 'test'"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "repository": {
     "type": "git",
@@ -15,6 +15,9 @@
   },
   "bugs": {
     "url": "https://github.com/vacuumdreams/monotaskr/issues"
+  },
+  "jest": {
+    "transform": {}
   },
   "homepage": "https://github.com/vacuumdreams/monotaskr#readme",
   "dependencies": {

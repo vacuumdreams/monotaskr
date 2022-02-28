@@ -1,6 +1,6 @@
 import {execa} from 'execa'
 
-export default async () => {
-  const {stdout} = await execa('git', ['diff', '--name-only', '--cached'])
+export default async ({cwd}) => {
+  const {stdout} = await execa('git', ['diff', '--name-only', '--cached'], {cwd})
   return stdout.split('\n')
 }
