@@ -5,7 +5,8 @@ import {execa} from 'execa'
 
 import collector from '../collector'
 
-const root = path.join(path.dirname(fileURLToPath(import.meta.url)), 'tmp')
+const rootName = 'tmp-collector-test-root'
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), rootName)
 
 describe('Collecting staged files', () => {
   beforeEach(async () => {
@@ -14,7 +15,7 @@ describe('Collecting staged files', () => {
 
   afterEach(async () => {
     await execa('git', ['reset', '.'], {cwd: root})
-    await fs.rmdir(root, {recursive: true})
+    await fs.rm(root, {recursive: true})
   })
 
   it('returns the list of staged files', async () => {
@@ -24,8 +25,8 @@ describe('Collecting staged files', () => {
 
     const results = await collector({cwd: root})
     expect(results).toEqual([
-      path.join('src', '__test__', 'tmp', 'file1.json'),
-      path.join('src', '__test__', 'tmp', 'file2.json'),
+      path.join('src', '__test__', rootName, 'file1.json'),
+      path.join('src', '__test__', rootName, 'file2.json'),
     ])
   })
 
@@ -36,7 +37,7 @@ describe('Collecting staged files', () => {
 
     const results = await collector({cwd: root})
     expect(results).toEqual([
-      path.join('src', '__test__', 'tmp', 'file1.json'),
+      path.join('src', '__test__', rootName, 'file1.json'),
     ])
   })
 })
