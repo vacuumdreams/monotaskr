@@ -3,7 +3,37 @@ import chalk from 'chalk'
 const ROOT_STAGE = 'root'
 const WORKSPACES_STAGE = 'ws'
 
-const defaultMainConfig = {
+const getDefaultTasks = (stage, packageJson) => {
+  const tasks = []
+
+  if (packageJson.scripts?.lint) {
+    tasks.push({
+      title: 'Lint',
+      command: 'npm run lint -- ${stagedFiles}',
+      stage,
+    })
+  }
+
+  if (packageJson.scripts?.typecheck) {
+    tasks.push({
+      title: 'Typecheck',
+      command: 'npm run typecheck',
+      stage,
+    })
+  }
+
+  if (packageJson.scripts?.test) {
+    tasks.push({
+      title: 'Test',
+      command: 'npm run test',
+      stage,
+    })
+  }
+
+  return tasks
+}
+
+const getDefaultMainConfig = packageJson => ({
   stages: [
     {
       id: ROOT_STAGE,
@@ -11,28 +41,12 @@ const defaultMainConfig = {
     },
     {
       id: WORKSPACES_STAGE,
-      title: 'Workspace Tasks',
+      title: 'Workspace tasks',
     },
   ],
-  tasks: [],
-}
-
-const defaultWsConfig = {
-  tasks: [
-    {
-      title: 'Lint',
-      command: 'npm run lint -- ${stagedFiles}',
-    },
-    {
-      title: 'Typecheck',
-      command: 'npm run typecheck',
-    },
-    {
-      title: 'Test',
-      command: 'npm run test',
-    },
-  ]
-}
+  tasks: (packageJson.workspaces?.length || !!packageJson.monotaskr?.stages) ? [] : getDefaultTasks(ROOT_STAGE, packageJson),
+  ...packageJson.monotaskr,
+})
 
 const getScopedFiles = (root, files) => files.filter(file => file.includes(root))
 
@@ -51,12 +65,19 @@ const addTask = ({tasksConfig, task, packageName, root, files, stage}) => {
   return tasksConfig
 }
 
+const getWsTasks = (hasCustomStages, packageJson) => {
+  if (hasCustomStages) {
+    return packageJson.monotaskr?.tasks ?? []
+  }
+  return getDefaultTasks(WORKSPACES_STAGE, packageJson)
+}
+
 export default async ({cwd, cmds, config, files: allFiles}) => {
-  const {stages, tasks} = {...defaultMainConfig, ...config.main.pjson.monotaskr}
+  const {stages, tasks} = getDefaultMainConfig(config.main.pjson)
 
   const defaultTasks = stages.reduce((acc, item) => {
     const stage = item.id ?? item
-    if (stage === WORKSPACES_STAGE && config.workspaces.length === 0) {
+    if (stage === WORKSPACES_STAGE && !config.workspaces?.length) {
       return acc
     }
     acc[stage] = {
@@ -75,8 +96,11 @@ export default async ({cwd, cmds, config, files: allFiles}) => {
     stage: ROOT_STAGE,
   }), defaultTasks)
 
-  const allTasks = config.workspaces.reduce((tasksConfig, wsConfig) => {
-    const {tasks = []} = {...defaultWsConfig, ...wsConfig.pjson.monotaskr}
+  const allTasks = (config.workspaces ?? []).reduce((tasksConfig, wsConfig) => {
+    const {tasks} = {
+      tasks: getWsTasks(!!config.main.pjson.monotaskr?.stages, wsConfig.pjson),
+      ...wsConfig.pjson.monotaskr,
+    }
     const files = getScopedFiles(wsConfig.root, allFiles)
     const packageName = wsConfig.pjson.name
     return tasks.reduce((acc, task) => addTask({
