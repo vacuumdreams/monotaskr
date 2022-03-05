@@ -327,6 +327,90 @@ describe('Transforms configuration into tasks', () => {
 
       await expect(async () => await transformer(arg)).rejects.toThrow()
     })
+
+    it('adds all files for default root stage', async () => {
+      const result = await transformer({
+        files: [
+          'file-1.js',
+          'file-2.js',
+        ],
+        config: {
+          main: {
+            root: '',
+            pjson: {
+              name: 'root',
+              scripts: {
+                test: 'do-test',
+              },
+            },
+          },
+        }
+      })
+
+      expect(result).toEqual([
+        {
+          title: 'Root tasks',
+          tasks: [
+            {
+              title: 'Test',
+              command: 'npm run test',
+              files: ['file-1.js', 'file-2.js'],
+              packageName: 'root',
+              root: '',
+              title: `${chalk.italic.gray('root')}: ${chalk.bold('Test')}`,
+            }
+          ],
+        },
+      ])
+    })
+
+    it('adds all files for a custom stage task in the root', async () => {
+      const result = await transformer({
+        files: [
+          'file-1.js',
+          'file-2.js',
+        ],
+        config: {
+          main: {
+            root: '',
+            pjson: {
+              name: 'root',
+              monotaskr: {
+                stages: [
+                  {
+                    title: 'Custom tasks',
+                    id: 'custom',
+                  },
+                ],
+                tasks: [
+                  {
+                    title: 'Task one',
+                    command: 'do-this',
+                    stage: 'custom',
+                  },
+                ],
+              },
+            },
+          },
+        }
+      })
+
+      expect(result).toEqual([
+        {
+          title: 'Custom tasks',
+          tasks: [
+            {
+              title: 'Task one',
+              command: 'do-this',
+              files: ['file-1.js', 'file-2.js'],
+              packageName: 'root',
+              root: '',
+              title: `${chalk.italic.gray('root')}: ${chalk.bold('Task one')}`,
+            },
+          ],
+        },
+      ])
+    })
   })
 
   describe('with workspaces', () => {
@@ -714,6 +798,113 @@ describe('Transforms configuration into tasks', () => {
       }
 
       await expect(async () => await transform(arg)).rejects.toThrow()
+    })
+
+    it('adds only scoped files for default workspace stage', async () => {
+      const result = await transformer({
+        files: [
+          'file-1.js',
+          'ws1/file-2.js',
+        ],
+        config: {
+          main: {
+            root: '',
+            pjson: {
+              name: 'root',
+              workspaces: ['ws1'],
+            },
+          },
+          workspaces: [
+            {
+              root: 'ws1',
+              pjson: {
+                name: 'ws1',
+                scripts: {
+                  test: 'do-test',
+                }
+              },
+            },
+          ],
+        }
+      })
+      expect(result).toEqual([
+        {
+          title: 'Root tasks',
+          tasks: [],
+        },
+        {
+          title: 'Workspace tasks',
+          tasks: [
+            {
+              root: 'ws1',
+              files: ['ws1/file-2.js'],
+              packageName: 'ws1',
+              command: 'npm run test',
+              title: `${chalk.italic.gray('ws1')}: ${chalk.bold('Test')}`,
+            }
+          ],
+        }
+      ])
+    })
+
+    it('adds only scoped files for a custom stage task in a workspace', async () => {
+      const result = await transformer({
+        files: [
+          'file-1.js',
+          'ws1/file-2.js',
+        ],
+        config: {
+          main: {
+            root: '',
+            pjson: {
+              name: 'root',
+              workspaces: ['ws1'],
+              monotaskr: {
+                stages: [
+                  {
+                    id: 'custom',
+                    title: 'Custom stage',
+                  },
+                ],
+              },
+            },
+          },
+          workspaces: [
+            {
+              root: 'ws1',
+              pjson: {
+                name: 'ws1',
+                monotaskr: {
+                  tasks: [
+                    {
+                      title: 'Custom task',
+                      command: 'do-something',
+                      stage: 'custom',
+                    },
+                  ],
+                },
+                scripts: {
+                  test: 'do-test',
+                }
+              },
+            },
+          ],
+        }
+      })
+      expect(result).toEqual([
+        {
+          title: 'Custom stage',
+          tasks: [
+            {
+              root: 'ws1',
+              files: ['ws1/file-2.js'],
+              packageName: 'ws1',
+              command: 'do-something',
+              title: `${chalk.italic.gray('ws1')}: ${chalk.bold('Custom task')}`,
+            }
+          ],
+        }
+      ])
     })
   })
 })

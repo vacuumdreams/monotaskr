@@ -51,7 +51,7 @@ const getDefaultMainConfig = packageJson => ({
 const getScopedFiles = (root, files) => files.filter(file => file.includes(root))
 
 const addTask = ({tasksConfig, task, packageName, root, files, stage}) => {
-  if (task.stage && !tasksConfig[task.stage]) {
+  if (!tasksConfig[task.stage ?? stage]) {
     throw new Error(`The stage ${chalk.bold(`"${task.stage}"`)} does not exist. Make sure you provide a configuration for it in your root.`)
   }
 
@@ -76,7 +76,7 @@ export default async ({cwd, cmds, config, files: allFiles}) => {
   const {stages, tasks} = getDefaultMainConfig(config.main.pjson)
 
   const defaultTasks = stages.reduce((acc, item) => {
-    const stage = item.id ?? item
+    const stage = item.id
     if (stage === WORKSPACES_STAGE && !config.workspaces?.length) {
       return acc
     }
