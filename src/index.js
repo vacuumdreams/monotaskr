@@ -1,10 +1,10 @@
-import path from 'path'
-import {execa} from 'execa'
-import Listr from 'listr'
+const path = require('path')
+const {execa} = require('execa')
+const Listr = require('listr')
 
-import collect from './collector/index.js'
-import read from './reader/index.js'
-import transform from './transformer/index.js'
+const collect = require('./collector/index.js')
+const read = require('./reader/index.js')
+const transform = require('./transformer/index.js')
 
 const toTask = ({title, packageName, command, files, root}) => ({
   title,
@@ -17,16 +17,30 @@ const toTask = ({title, packageName, command, files, root}) => ({
   }
 })
 
-export default async ({cmds, cwd}) => {
+const getSkipMessage = ({title, files, tasks}) => {
+  if (tasks.length === 0) {
+    return `No tasks found for the "${title}" stage.`
+  }
+  if (files.lenght === 0) {
+    return `No staged files for the "${title}" stage`
+  }
+  return false
+}
+
+module.exports = async ({cwd, options}) => {
   const files = await collect({cwd})
   const config = await read({cwd})
-  const stages = await transform({cwd, cmds, config, files})
+  const stages = await transform({cwd, options, config, files})
 
   const taskr = new Listr(stages.map(({title, tasks = []}) => ({
     title,
-    skip: () => tasks.length === 0 ? `No tasks found for the "${title}" stage.` : false,
+    skip: () => getSkipMessage({title, files, tasks}),
     task: () => new Listr(tasks.map(toTask), {concurrent: true, collapse: false})
-  })), {concurrent: false, collapse: false})
+  })), {
+    concurrent: false,
+    collapse: false,
+    renderer: process.env.NODE_ENV === 'test' ? 'silent' : 'main',
+  })
 
-  return taskr.run({cmds, cwd, config, files})
+  return taskr.run({cwd, options, config, files})
 }

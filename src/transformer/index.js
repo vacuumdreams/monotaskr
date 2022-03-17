@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+const chalk = require('chalk')
 
 const ROOT_STAGE = 'root'
 const WORKSPACES_STAGE = 'ws'
@@ -72,7 +72,7 @@ const getWsTasks = (hasCustomStages, packageJson) => {
   return getDefaultTasks(WORKSPACES_STAGE, packageJson)
 }
 
-export default async ({cwd, cmds, config, files: allFiles}) => {
+module.exports = async ({cwd, options, config, files: allFiles}) => {
   const {stages, tasks} = getDefaultMainConfig(config.main.pjson)
 
   const defaultTasks = stages.reduce((acc, item) => {

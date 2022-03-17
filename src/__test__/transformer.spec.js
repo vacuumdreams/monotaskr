@@ -1,8 +1,7 @@
-import chalk from 'chalk'
-import transformer from '../transformer'
+const chalk = require('chalk')
+const transformer = require('../transformer')
 
 describe('Transforms configuration into tasks', () => {
-
   describe('without workspaces', () => {
     it('creates default stage with empty tasks when no matching scripts are defined', async () => {
       const result = await transformer({
@@ -352,7 +351,6 @@ describe('Transforms configuration into tasks', () => {
           title: 'Root tasks',
           tasks: [
             {
-              title: 'Test',
               command: 'npm run test',
               files: ['file-1.js', 'file-2.js'],
               packageName: 'root',
@@ -400,7 +398,6 @@ describe('Transforms configuration into tasks', () => {
           title: 'Custom tasks',
           tasks: [
             {
-              title: 'Task one',
               command: 'do-this',
               files: ['file-1.js', 'file-2.js'],
               packageName: 'root',

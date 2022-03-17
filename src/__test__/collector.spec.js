@@ -1,12 +1,11 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import {fileURLToPath} from 'node:url'
-import {execa} from 'execa'
+const fs = require('node:fs/promises')
+const path = require('node:path')
+const {execa} = require('execa')
 
-import collector from '../collector'
+const collector = require('../collector')
 
 const rootName = 'tmp-collector-test-root'
-const root = path.join(path.dirname(fileURLToPath(import.meta.url)), rootName)
+const root = path.join(__dirname, rootName)
 
 describe('Collecting staged files', () => {
   beforeEach(async () => {
