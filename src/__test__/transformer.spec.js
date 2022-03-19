@@ -46,7 +46,7 @@ describe('Transforms configuration into tasks', () => {
               root: '',
               files: [],
               packageName: 'root',
-              command: 'npm run lint -- ${stagedFiles}',
+              command: 'npm run lint -- {files}',
               title: `${chalk.italic.gray('root')}: ${chalk.bold('Lint')}`,
             },
           ],
@@ -480,7 +480,7 @@ describe('Transforms configuration into tasks', () => {
               root: 'ws1',
               files: [],
               packageName: 'ws1',
-              command: 'npm run lint -- ${stagedFiles}',
+              command: 'npm run lint -- {files}',
               title: `${chalk.italic.gray('ws1')}: ${chalk.bold('Lint')}`,
             },
           ],
@@ -834,7 +834,7 @@ describe('Transforms configuration into tasks', () => {
           tasks: [
             {
               root: 'ws1',
-              files: ['ws1/file-2.js'],
+              files: ['file-2.js'],
               packageName: 'ws1',
               command: 'npm run test',
               title: `${chalk.italic.gray('ws1')}: ${chalk.bold('Test')}`,
@@ -894,7 +894,7 @@ describe('Transforms configuration into tasks', () => {
           tasks: [
             {
               root: 'ws1',
-              files: ['ws1/file-2.js'],
+              files: ['file-2.js'],
               packageName: 'ws1',
               command: 'do-something',
               title: `${chalk.italic.gray('ws1')}: ${chalk.bold('Custom task')}`,

@@ -4,9 +4,10 @@
   "description": "JS Monorepo Task Runner",
   "author": "Botond Fekete",
   "license": "MIT",
-  "bin": "index.js",
+  "bin": "lib/index.js",
   "main": "src/index.js",
   "scripts": {
+    "build": "esbuild index.js --bundle --platform=node --outfile=lib/index.js",
     "test": "jest"
   },
   "repository": {
@@ -32,9 +33,11 @@
     "execa": "^6.0.0",
     "glob": "^7.2.0",
     "glob-promise": "^4.2.2",
+    "glob-to-regexp": "^0.4.1",
     "listr": "^0.14.3"
   },
   "devDependencies": {
+    "esbuild": "^0.14.27",
     "husky": "^7.0.4",
     "jest": "^27.4.7",
     "jest-esbuild": "^0.2.6"

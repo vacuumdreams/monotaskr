@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require('node:path')
 const {execa} = require('execa')
 const Listr = require('listr')
 
@@ -9,7 +9,7 @@ const transform = require('./transformer/index.js')
 const toTask = ({title, packageName, command, files, root}) => ({
   title,
   task: context => {
-    const [cmd, ...args] = command.replace(new RegExp('${stagedFiles}', 'g'), context.files.join(' ')).split(' ')
+    const [cmd, ...args] = command.replace(new RegExp('{files}', 'g'), files.join(' ')).split(' ')
     return execa(cmd, args, {cwd: path.join(context.cwd, root)})
   },
   skip: context => {

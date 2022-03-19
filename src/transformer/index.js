@@ -1,4 +1,5 @@
 const chalk = require('chalk')
+const toRegExp = require('glob-to-regexp')
 
 const ROOT_STAGE = 'root'
 const WORKSPACES_STAGE = 'ws'
@@ -9,7 +10,7 @@ const getDefaultTasks = (stage, packageJson) => {
   if (packageJson.scripts?.lint) {
     tasks.push({
       title: 'Lint',
-      command: 'npm run lint -- ${stagedFiles}',
+      command: 'npm run lint -- {files}',
       stage,
     })
   }
@@ -18,6 +19,7 @@ const getDefaultTasks = (stage, packageJson) => {
     tasks.push({
       title: 'Typecheck',
       command: 'npm run typecheck',
+      match: '*.{ts,tsx}',
       stage,
     })
   }
@@ -48,7 +50,9 @@ const getDefaultMainConfig = packageJson => ({
   ...packageJson.monotaskr,
 })
 
-const getScopedFiles = (root, files) => files.filter(file => file.includes(root))
+const getScopedFiles = (root, files, match = '*') => files
+  .filter(file => file.includes(root) && file.match(toRegExp(match)))
+  .map(file => file.replace(`${root}/`, ''))
 
 const addTask = ({tasksConfig, task, packageName, root, files, stage}) => {
   if (!tasksConfig[task.stage ?? stage]) {
@@ -62,6 +66,7 @@ const addTask = ({tasksConfig, task, packageName, root, files, stage}) => {
     command: task.command,
     title: `${chalk.italic.gray(packageName)}: ${chalk.bold(task.title)}`,
   })
+
   return tasksConfig
 }
 

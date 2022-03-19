@@ -1,7 +1,7 @@
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const util = require('node:util')
-const exec = util.promisify(require('child_process').exec);
+const exec = util.promisify(require('node:child_process').exec);
 
 jest.mock('execa', () => ({
   execa: jest.fn().mockReturnValue(Promise.resolve({
@@ -79,7 +79,7 @@ describe('monotaskr', () => {
 
         expect(execa).toHaveBeenCalledTimes(4)
         expect(execa).toHaveBeenCalledWith('git', ['diff', '--name-only', '--cached'], {cwd: root})
-        expect(execa).toHaveBeenCalledWith('npm', ['run', 'lint', '--', '${stagedFiles}'], {cwd: root})
+        expect(execa).toHaveBeenCalledWith('npm', ['run', 'lint', '--', 'package.json'], {cwd: root})
         expect(execa).toHaveBeenCalledWith('npm', ['run', 'test'], {cwd: root})
         expect(execa).toHaveBeenCalledWith('npm', ['run', 'typecheck'], {cwd: root})
       })
@@ -245,7 +245,7 @@ describe('monotaskr', () => {
 
         expect(execa).toHaveBeenCalledTimes(4)
         expect(execa).toHaveBeenCalledWith('git', ['diff', '--name-only', '--cached'], {cwd: root})
-        expect(execa).toHaveBeenCalledWith('npm', ['run', 'lint', '--', '${stagedFiles}'], {cwd: path.join(root, 'w1')})
+        expect(execa).toHaveBeenCalledWith('npm', ['run', 'lint', '--', 'package.json'], {cwd: path.join(root, 'w1')})
         expect(execa).toHaveBeenCalledWith('npm', ['run', 'test'], {cwd: path.join(root, 'w1')})
         expect(execa).toHaveBeenCalledWith('npm', ['run', 'typecheck'], {cwd: path.join(root, 'w1')})
       })
@@ -277,13 +277,14 @@ describe('monotaskr', () => {
         }
 
         execa.mockReturnValueOnce(Promise.resolve({
-          stdout: ['package.json', 'w1/package.json', 'w2/package.json'].join('\n'),
+          stdout: ['package.json', 'w1/package.json', 'w1/index.js', 'w2/package.json'].join('\n'),
         }))
 
         await fs.mkdir(path.join(root, 'w1'))
         await fs.mkdir(path.join(root, 'w2'))
         await fs.writeFile(path.join(root, 'package.json'), JSON.stringify(rootJson))
         await fs.writeFile(path.join(root, 'w1', 'package.json'), JSON.stringify(w1Json))
+        await fs.writeFile(path.join(root, 'w1', 'index.js'), 'module.exports = {}')
         await fs.writeFile(path.join(root, 'w2', 'package.json'), JSON.stringify(w2Json))
         await monotaskr({cwd: root})
 
@@ -333,7 +334,7 @@ describe('monotaskr', () => {
               },
               {
                 title: 'task two',
-                command: 'do that',
+                command: 'do that with {files}',
                 stage: '1',
               },
             ],
@@ -344,19 +345,20 @@ describe('monotaskr', () => {
         }
 
         execa.mockReturnValueOnce(Promise.resolve({
-          stdout: ['package.json', 'w1/package.json', 'w2/package.json'].join('\n'),
+          stdout: ['package.json', 'w1/package.json', 'w1/index.js', 'w2/package.json'].join('\n'),
         }))
 
         await fs.mkdir(path.join(root, 'w1'))
         await fs.mkdir(path.join(root, 'w2'))
         await fs.writeFile(path.join(root, 'package.json'), JSON.stringify(rootJson))
+        await fs.writeFile(path.join(root, 'w1', 'index.js'), 'module.exports = {}')
         await fs.writeFile(path.join(root, 'w1', 'package.json'), JSON.stringify(w1Json))
         await fs.writeFile(path.join(root, 'w2', 'package.json'), JSON.stringify(w2Json))
         await monotaskr({cwd: root})
 
         expect(execa).toHaveBeenCalledTimes(4)
         expect(execa.mock.calls[0]).toEqual(['git', ['diff', '--name-only', '--cached'], {cwd: root}])
-        expect(execa.mock.calls[1]).toEqual(['do', ['that'], {cwd: path.join(root, 'w1')}])
+        expect(execa.mock.calls[1]).toEqual(['do', ['that', 'with', 'package.json', 'index.js'], {cwd: path.join(root, 'w1')}])
         expect(execa.mock.calls[2]).toEqual(['rooting', [], {cwd: root}])
         expect(execa.mock.calls[3]).toEqual(['do', ['this'], {cwd: path.join(root, 'w1')}])
       })
