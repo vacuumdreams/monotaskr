@@ -1,6 +1,6 @@
-const {execa} = require('execa')
+import {execa} from 'execa';
 
-module.exports = async ({cwd}) => {
-  const {stdout} = await execa('git', ['diff', '--name-only', '--cached'], {cwd})
-  return !stdout ? [] : stdout.split('\n')
+export default async function collector({cwd}) {
+	const {stdout} = await execa('git', ['diff', '--name-only', '--cached'], {cwd});
+	return stdout ? stdout.split('\n') : [];
 }
