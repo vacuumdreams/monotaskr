@@ -116,6 +116,68 @@ describe('Transforms configuration into tasks', () => {
       ])
     })
 
+    it('adds only matching files to default lint task', async () => {
+      const result = await transformer({
+        files: ['some.file', 'js/index.js', 'js/Component.jsx', 'ts/index.ts', 'ts/Component.tsx'],
+        config: {
+          main: {
+            root: '',
+            pjson: {
+              name: 'root',
+              scripts: {
+                lint: 'do-lint',
+              },
+            },
+          },
+        }
+      })
+      expect(result).toEqual([
+        {
+          title: 'Root tasks',
+          tasks: [
+            {
+              root: '',
+              files: ['js/index.js', 'js/Component.jsx', 'ts/index.ts', 'ts/Component.tsx'],
+              packageName: 'root',
+              command: 'npm run lint -- {files}',
+              title: `${chalk.italic.gray('root')}: ${chalk.bold('Lint')}`,
+            },
+          ],
+        }
+      ])
+    })
+
+    it('adds only matching files to default typecheck task', async () => {
+      const result = await transformer({
+        files: ['some.file', 'js/index.js', 'js/Component.jsx', 'ts/index.ts', 'ts/Component.tsx'],
+        config: {
+          main: {
+            root: '',
+            pjson: {
+              name: 'root',
+              scripts: {
+                typecheck: 'do-typecheck',
+              },
+            },
+          },
+        }
+      })
+      expect(result).toEqual([
+        {
+          title: 'Root tasks',
+          tasks: [
+            {
+              root: '',
+              files: ['ts/index.ts', 'ts/Component.tsx'],
+              packageName: 'root',
+              command: 'npm run typecheck',
+              title: `${chalk.italic.gray('root')}: ${chalk.bold('Typecheck')}`,
+            },
+          ],
+        }
+      ])
+    })
+
     it('applies custom task definition', async () => {
       const result = await transformer({
         files: [],
@@ -330,8 +392,9 @@ describe('Transforms configuration into tasks', () => {
     it('adds all files for default root stage', async () => {
       const result = await transformer({
         files: [
-          'file-1.js',
+          'file-1.file',
           'file-2.js',
+          'file-3.js',
         ],
         config: {
           main: {
@@ -352,7 +415,7 @@ describe('Transforms configuration into tasks', () => {
           tasks: [
             {
               command: 'npm run test',
-              files: ['file-1.js', 'file-2.js'],
+              files: ['file-1.file', 'file-2.js', 'file-3.js'],
               packageName: 'root',
               root: '',
               title: `${chalk.italic.gray('root')}: ${chalk.bold('Test')}`,
@@ -362,11 +425,12 @@ describe('Transforms configuration into tasks', () => {
       ])
     })
 
-    it('adds all files for a custom stage task in the root', async () => {
+    it('adds all files for a custom stage task in the root when no pattern defined', async () => {
       const result = await transformer({
         files: [
-          'file-1.js',
+          'file-1.file',
           'file-2.js',
+          'file-3.js',
         ],
         config: {
           main: {
@@ -399,7 +463,57 @@ describe('Transforms configuration into tasks', () => {
           tasks: [
             {
               command: 'do-this',
-              files: ['file-1.js', 'file-2.js'],
+              files: ['file-1.file', 'file-2.js', 'file-3.js'],
+              packageName: 'root',
+              root: '',
+              title: `${chalk.italic.gray('root')}: ${chalk.bold('Task one')}`,
+            },
+          ],
+        },
+      ])
+    })
+
+    it('adds only matching files for a custom stage task in the root', async () => {
+      const result = await transformer({
+        files: [
+          'file-1.file',
+          'file-2.js',
+          'file-3.js',
+          'file-4.ts',
+        ],
+        config: {
+          main: {
+            root: '',
+            pjson: {
+              name: 'root',
+              monotaskr: {
+                stages: [
+                  {
+                    title: 'Custom tasks',
+                    id: 'custom',
+                  },
+                ],
+                tasks: [
+                  {
+                    title: 'Task one',
+                    command: 'do-this',
+                    stage: 'custom',
+                    match: '*.js',
+                  },
+                ],
+              },
+            },
+          },
+        }
+      })
+
+      expect(result).toEqual([
+        {
+          title: 'Custom tasks',
+          tasks: [
+            {
+              command: 'do-this',
+              files: ['file-2.js', 'file-3.js'],
               packageName: 'root',
               root: '',
               title: `${chalk.italic.gray('root')}: ${chalk.bold('Task one')}`,
@@ -895,6 +1009,69 @@ describe('Transforms configuration into tasks', () => {
             {
               root: 'ws1',
               files: ['file-2.js'],
+              packageName: 'ws1',
+              command: 'do-something',
+              title: `${chalk.italic.gray('ws1')}: ${chalk.bold('Custom task')}`,
+            }
+          ],
+        }
+      ])
+    })
+
+    it('adds only matching scoped files for a custom stage task in a workspace when there is a given pattern', async () => {
+      const result = await transformer({
+        files: [
+          'file-1.ts',
+          'file-2.js',
+          'ws1/file-3.js',
+          'ws1/file-4.ts',
+        ],
+        config: {
+          main: {
+            root: '',
+            pjson: {
+              name: 'root',
+              workspaces: ['ws1'],
+              monotaskr: {
+                stages: [
+                  {
+                    id: 'custom',
+                    title: 'Custom stage',
+                  },
+                ],
+              },
+            },
+          },
+          workspaces: [
+            {
+              root: 'ws1',
+              pjson: {
+                name: 'ws1',
+                monotaskr: {
+                  tasks: [
+                    {
+                      title: 'Custom task',
+                      command: 'do-something',
+                      stage: 'custom',
+                      match: '*.ts',
+                    },
+                  ],
+                },
+                scripts: {
+                  test: 'do-test',
+                }
+              },
+            },
+          ],
+        }
+      })
+      expect(result).toEqual([
+        {
+          title: 'Custom stage',
+          tasks: [
+            {
+              root: 'ws1',
+              files: ['file-4.ts'],
               packageName: 'ws1',
               command: 'do-something',
               title: `${chalk.italic.gray('ws1')}: ${chalk.bold('Custom task')}`,
