@@ -11,6 +11,7 @@ const getDefaultTasks = (stage, packageJson) => {
     tasks.push({
       title: 'Lint',
       command: 'npm run lint -- {files}',
+      match: '*.{js,jsx,ts,tsx}',
       stage,
     })
   }
@@ -50,8 +51,8 @@ const getDefaultMainConfig = packageJson => ({
   ...packageJson.monotaskr,
 })
 
-const getScopedFiles = (root, files, match = '*') => files
-  .filter(file => file.includes(root) && file.match(toRegExp(match)))
+const getScopedFiles = (root, files) => files
+  .filter(file => file.startsWith(root))
   .map(file => file.replace(`${root}/`, ''))
 
 const addTask = ({tasksConfig, task, packageName, root, files, stage}) => {
@@ -59,9 +60,11 @@ const addTask = ({tasksConfig, task, packageName, root, files, stage}) => {
     throw new Error(`The stage ${chalk.bold(`"${task.stage}"`)} does not exist. Make sure you provide a configuration for it in your root.`)
   }
 
+  const pattern = task.match && toRegExp(task.match, {extended: true})
+
   tasksConfig[task.stage ?? stage].tasks.push({
     root,
-    files,
+    files: pattern ? files.filter(file => file.match(pattern)) : files,
     packageName,
     command: task.command,
     title: `${chalk.italic.gray(packageName)}: ${chalk.bold(task.title)}`,
