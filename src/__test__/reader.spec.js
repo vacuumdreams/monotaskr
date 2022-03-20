@@ -1,151 +1,177 @@
-const fs = require('node:fs/promises');
-const path = require('node:path');
-const {execa} = require('execa');
+const fs = require('node:fs/promises')
+const path = require('node:path')
+const {execa} = require('execa')
 
-const reader = require('../reader');
+const reader = require('../reader')
 
-const rootName = 'tmp-reader-test-root';
-const root = path.join(__dirname, rootName);
+const rootName = 'tmp-reader-test-root'
+const root = path.join(__dirname, rootName)
 
 describe('Reading package json files', () => {
-	beforeEach(async () => {
-		await fs.mkdir(root);
-	});
+  beforeEach(async () => {
+    await fs.mkdir(root)
+    await execa('git', ['init'], {cwd: root})
+  })
 
-	afterEach(async () => {
-		await fs.rm(root, {recursive: true});
-	});
+  afterEach(async () => {
+    await fs.rm(root, {recursive: true})
+  })
 
-	it('adds root and explicit workspaces', async () => {
-		const rootJson = {
-			name: '@root',
-			workspaces: [
-				'./ws1',
-				'./nested/path/ws2',
-			],
-		};
+  it('adds root and explicit workspaces', async () => {
+    const rootJson = {
+      name: '@root',
+      workspaces: ['./ws1', './nested/path/ws2'],
+    }
 
-		const ws1Json = {
-			name: '@root/ws1',
-		};
+    const ws1Json = {
+      name: '@root/ws1',
+    }
 
-		const ws2Json = {
-			name: '@root/ws2',
-		};
+    const ws2Json = {
+      name: '@root/ws2',
+    }
 
-		await fs.mkdir(path.join(root, 'ws1'), {recursive: true});
-		await fs.mkdir(path.join(root, 'nested', 'path', 'ws2'), {recursive: true});
+    await fs.mkdir(path.join(root, 'ws1'), {recursive: true})
+    await fs.mkdir(path.join(root, 'nested', 'path', 'ws2'), {recursive: true})
 
-		await fs.writeFile(path.join(root, 'package.json'), JSON.stringify(rootJson));
-		await fs.writeFile(path.join(root, 'ws1', 'package.json'), JSON.stringify(ws1Json));
-		await fs.writeFile(path.join(root, 'nested', 'path', 'ws2', 'package.json'), JSON.stringify(ws2Json));
+    await fs.writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify(rootJson),
+    )
+    await fs.writeFile(
+      path.join(root, 'ws1', 'package.json'),
+      JSON.stringify(ws1Json),
+    )
+    await fs.writeFile(
+      path.join(root, 'nested', 'path', 'ws2', 'package.json'),
+      JSON.stringify(ws2Json),
+    )
 
-		const {main, workspaces} = await reader({cwd: root});
+    const {main, workspaces} = await reader({cwd: root})
 
-		expect(main).toEqual({root: '', pjson: rootJson});
-		expect(workspaces).toEqual([
-			{root: 'ws1', pjson: ws1Json},
-			{root: 'nested/path/ws2', pjson: ws2Json},
-		]);
-	});
+    expect(main).toEqual({root: '', pjson: rootJson})
+    expect(workspaces).toEqual([
+      {root: 'ws1', pjson: ws1Json},
+      {root: 'nested/path/ws2', pjson: ws2Json},
+    ])
+  })
 
-	it('adds root and wildcard workspaces', async () => {
-		const rootJson = {
-			name: '@root',
-			workspaces: [
-				'./ws/*',
-			],
-		};
+  it('adds root and wildcard workspaces', async () => {
+    const rootJson = {
+      name: '@root',
+      workspaces: ['./ws/*'],
+    }
 
-		const ws1Json = {
-			name: '@root/ws1',
-		};
+    const ws1Json = {
+      name: '@root/ws1',
+    }
 
-		const ws2Json = {
-			name: '@root/ws2',
-		};
+    const ws2Json = {
+      name: '@root/ws2',
+    }
 
-		const ws3Json = {
-			name: '@root/ws3',
-		};
+    const ws3Json = {
+      name: '@root/ws3',
+    }
 
-		await fs.mkdir(path.join(root, 'ws', 'ws1'), {recursive: true});
-		await fs.mkdir(path.join(root, 'ws', 'ws2'), {recursive: true});
-		await fs.mkdir(path.join(root, 'ws', 'ws3'), {recursive: true});
+    await fs.mkdir(path.join(root, 'ws', 'ws1'), {recursive: true})
+    await fs.mkdir(path.join(root, 'ws', 'ws2'), {recursive: true})
+    await fs.mkdir(path.join(root, 'ws', 'ws3'), {recursive: true})
 
-		await fs.writeFile(path.join(root, 'package.json'), JSON.stringify(rootJson));
-		await fs.writeFile(path.join(root, 'ws', 'ws1', 'package.json'), JSON.stringify(ws1Json));
-		await fs.writeFile(path.join(root, 'ws', 'ws2', 'package.json'), JSON.stringify(ws2Json));
-		await fs.writeFile(path.join(root, 'ws', 'ws3', 'package.json'), JSON.stringify(ws3Json));
+    await fs.writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify(rootJson),
+    )
+    await fs.writeFile(
+      path.join(root, 'ws', 'ws1', 'package.json'),
+      JSON.stringify(ws1Json),
+    )
+    await fs.writeFile(
+      path.join(root, 'ws', 'ws2', 'package.json'),
+      JSON.stringify(ws2Json),
+    )
+    await fs.writeFile(
+      path.join(root, 'ws', 'ws3', 'package.json'),
+      JSON.stringify(ws3Json),
+    )
 
-		const {main, workspaces} = await reader({cwd: root});
+    const {main, workspaces} = await reader({cwd: root})
 
-		expect(main).toEqual({root: '', pjson: rootJson});
-		expect(workspaces).toEqual([
-			{root: 'ws/ws1', pjson: ws1Json},
-			{root: 'ws/ws2', pjson: ws2Json},
-			{root: 'ws/ws3', pjson: ws3Json},
-		]);
-	});
+    expect(main).toEqual({root: '', pjson: rootJson})
+    expect(workspaces).toEqual([
+      {root: 'ws/ws1', pjson: ws1Json},
+      {root: 'ws/ws2', pjson: ws2Json},
+      {root: 'ws/ws3', pjson: ws3Json},
+    ])
+  })
 
-	it('does not add unlisted modules', async () => {
-		const rootJson = {
-			name: '@root',
-			workspaces: [
-				'./ws/ws1',
-			],
-		};
+  it('does not add unlisted modules', async () => {
+    const rootJson = {
+      name: '@root',
+      workspaces: ['./ws/ws1'],
+    }
 
-		const ws1Json = {
-			name: '@root/ws1',
-		};
+    const ws1Json = {
+      name: '@root/ws1',
+    }
 
-		const ws2Json = {
-			name: '@root/ws2',
-		};
+    const ws2Json = {
+      name: '@root/ws2',
+    }
 
-		await fs.mkdir(path.join(root, 'ws', 'ws1'), {recursive: true});
-		await fs.mkdir(path.join(root, 'ws', 'ws2'), {recursive: true});
+    await fs.mkdir(path.join(root, 'ws', 'ws1'), {recursive: true})
+    await fs.mkdir(path.join(root, 'ws', 'ws2'), {recursive: true})
 
-		await fs.writeFile(path.join(root, 'package.json'), JSON.stringify(rootJson));
-		await fs.writeFile(path.join(root, 'ws', 'ws1', 'package.json'), JSON.stringify(ws1Json));
-		await fs.writeFile(path.join(root, 'ws', 'ws2', 'package.json'), JSON.stringify(ws2Json));
+    await fs.writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify(rootJson),
+    )
+    await fs.writeFile(
+      path.join(root, 'ws', 'ws1', 'package.json'),
+      JSON.stringify(ws1Json),
+    )
+    await fs.writeFile(
+      path.join(root, 'ws', 'ws2', 'package.json'),
+      JSON.stringify(ws2Json),
+    )
 
-		const {main, workspaces} = await reader({cwd: root});
+    const {main, workspaces} = await reader({cwd: root})
 
-		expect(main).toEqual({root: '', pjson: rootJson});
-		expect(workspaces).toEqual([
-			{root: 'ws/ws1', pjson: ws1Json},
-		]);
-	});
+    expect(main).toEqual({root: '', pjson: rootJson})
+    expect(workspaces).toEqual([{root: 'ws/ws1', pjson: ws1Json}])
+  })
 
-	it('works with packages without workspaces', async () => {
-		const rootJson = {
-			name: '@root',
-		};
+  it('works with packages without workspaces', async () => {
+    const rootJson = {
+      name: '@root',
+    }
 
-		await fs.writeFile(path.join(root, 'package.json'), JSON.stringify(rootJson));
-		const {main, workspaces} = await reader({cwd: root});
+    await fs.writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify(rootJson),
+    )
+    const {main, workspaces} = await reader({cwd: root})
 
-		expect(main).toEqual({root: '', pjson: rootJson});
-		expect(workspaces).toEqual([]);
-	});
+    expect(main).toEqual({root: '', pjson: rootJson})
+    expect(workspaces).toEqual([])
+  })
 
-	it('throws an error when workspace package json not found', async () => {
-		const rootJson = {
-			name: '@root',
-			workspaces: [
-				'ws1',
-			],
-		};
+  it('throws an error when workspace package json not found', async () => {
+    const rootJson = {
+      name: '@root',
+      workspaces: ['ws1'],
+    }
 
-		await fs.mkdir(path.join(root, 'ws1'), {recursive: true});
-		await fs.writeFile(path.join(root, 'package.json'), JSON.stringify(rootJson));
+    await fs.mkdir(path.join(root, 'ws1'), {recursive: true})
+    await fs.writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify(rootJson),
+    )
 
-		await expect(async () => await reader({cwd: root})).rejects.toThrow();
-	});
+    await expect(async () => reader({cwd: root})).rejects.toThrow()
+  })
 
-	it('throws an error when root package json not found', async () => {
-		await expect(async () => await reader({cwd: root})).rejects.toThrow();
-	});
-});
+  it('throws an error when root package json not found', async () => {
+    await expect(async () => reader({cwd: root})).rejects.toThrow()
+  })
+})

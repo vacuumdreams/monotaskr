@@ -1,9 +1,0 @@
-{
-  "envs": ["node"],
-  "space": true,
-  "semi": false,
-  "prettier": true,
-  "rules": {
-    "unicorn/no-array-reduce": 0
-  }
-}

@@ -4,8 +4,8 @@
   "description": "JS Monorepo Task Runner",
   "author": "Botond Fekete",
   "license": "MIT",
-  "bin": "lib/index.js",
-  "main": "src/index.js",
+  "bin": "lib/bin.js",
+  "main": "lib/index.js",
   "homepage": "https://github.com/vacuumdreams/monotaskr#readme",
   "bugs": {
     "url": "https://github.com/vacuumdreams/monotaskr/issues"
@@ -19,9 +19,10 @@
     "npm": "8"
   },
   "scripts": {
-    "build": "esbuild index.js --bundle --platform=node --outfile=lib/index.js",
-    "lint": "xo index.js",
-    "test": "jest"
+    "build": "esbuild index.js --bundle --platform=node --outfile=lib/bin.js && esbuild src/index.js --bundle --platform=node --outfile=lib/index.js",
+    "lint": "xo",
+    "test": "jest",
+    "prepare": "husky install"
   },
   "jest": {
     "transform": {
@@ -33,6 +34,24 @@
       "#supports-color": "chalk/source/vendor/supports-color/index.js"
     }
   },
+  "xo": {
+    "envs": ["node"],
+    "space": 2,
+    "semicolon": false,
+    "prettier": true,
+    "rules": {
+      "import/extensions": 0,
+      "unicorn/prefer-object-from-entries": 0,
+      "unicorn/no-array-reduce": 0,
+      "unicorn/prefer-module": 0
+    },
+    "overrides": [
+      {
+        "files": "src/__test__/*.spec.js",
+        "globals": ["jest", "describe", "it", "expect", "beforeAll", "afterAll", "beforeEach", "afterEach"]
+      }
+    ]
+  },
   "dependencies": {
     "chalk": "^4.1.2",
     "execa": "^6.0.0",
@@ -43,7 +62,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.14.27",
-    "husky": "^7.0.4",
+    "husky": "^7.0.0",
     "jest": "^27.4.7",
     "jest-esbuild": "^0.2.6",
     "xo": "^0.48.0"
