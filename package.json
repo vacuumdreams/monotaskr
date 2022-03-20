@@ -25,8 +25,17 @@
     "prepare": "husky install"
   },
   "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "./src/**/*.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 90
+      }
+    },
     "transform": {
-      "^.+\\.js?$": "jest-esbuild"
+      "^.+\\.js?$": "esbuild-jest"
     },
     "transformIgnorePatterns": [],
     "moduleNameMapper": {
@@ -35,7 +44,9 @@
     }
   },
   "xo": {
-    "envs": ["node"],
+    "envs": [
+      "node"
+    ],
     "space": 2,
     "semicolon": false,
     "prettier": true,
@@ -48,7 +59,16 @@
     "overrides": [
       {
         "files": "src/__test__/*.spec.js",
-        "globals": ["jest", "describe", "it", "expect", "beforeAll", "afterAll", "beforeEach", "afterEach"]
+        "globals": [
+          "jest",
+          "describe",
+          "it",
+          "expect",
+          "beforeAll",
+          "afterAll",
+          "beforeEach",
+          "afterEach"
+        ]
       }
     ]
   },
@@ -62,9 +82,9 @@
   },
   "devDependencies": {
     "esbuild": "^0.14.27",
+    "esbuild-jest": "^0.5.0",
     "husky": "^7.0.0",
     "jest": "^27.4.7",
-    "jest-esbuild": "^0.2.6",
     "xo": "^0.48.0"
   },
   "keywords": [
